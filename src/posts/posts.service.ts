@@ -20,7 +20,7 @@ export class PostsService {
     });
   }
 
-  async get(userId: number) {
+  async getMy(userId: number) {
     return await this.prismaService.post.findMany({ where: { userId } });
   }
 

@@ -22,10 +22,14 @@ export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Get()
-  async get(@CurrentUser('id', ParseIntPipe) userId: number) {
-    return await this.postsService.get(userId);
+  async getAll(@CurrentUser('id', ParseIntPipe) userId: number) {
+    return await this.postsService.getAll(userId);
   }
 
+  @Get('my')
+  async getMy(@CurrentUser('id', ParseIntPipe) userId: number) {
+    return await this.postsService.getMy(userId);
+  }
   @Post()
   async createOne(
     @Body() dto: CreatePostDto,
