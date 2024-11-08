@@ -7,29 +7,35 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Post {
-  id Int @id @default(autoincrement())
-
-  title       String
-  description String?
-  status      PostPrivacyEnum @default(everyone)
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  @@map("posts")
-}
-
 model User {
   id Int @id @default(autoincrement())
 
-  email          String @unique
-  hashedPassword String @map("hashed_password")
+  email          String  @unique
+  hashedPassword String? @map("hashed_password")
+
+  posts Post[]
+  // TODO: implement user friends
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("users")
+}
+
+model Post {
+  id Int @id @default(autoincrement())
+
+  title       String
+  description String?
+  privacy     PostPrivacyEnum @default(everyone)
+
+  userId Int  @map("user_id")
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("posts")
 }
 
 enum PostPrivacyEnum {

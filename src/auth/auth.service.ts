@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { RegisterDto } from './dtos/register.dto';
 import { UsersService } from 'src/users/users.service';
 import { hash, verify } from 'argon2';
@@ -31,7 +31,11 @@ export class AuthService {
     if (!existingUser) {
       return null;
     }
-
+    if (!existingUser.hashedPassword) {
+      throw new BadRequestException(
+        'Probably you already have an account via google',
+      );
+    }
     const isValidPw = await verify(existingUser.hashedPassword, password);
 
     if (!isValidPw) {
@@ -39,6 +43,20 @@ export class AuthService {
     }
 
     return existingUser;
+  }
+
+  async googleAuth(email: string, res: Response) {
+    const existingUser = await this.usersService.getOne({ email });
+
+    if (existingUser) {
+      return await this.generateTokens(existingUser.id, res);
+    }
+
+    const createdUser = await this.usersService.createOne({
+      email,
+    });
+
+    return await this.generateTokens(createdUser.id, res);
   }
 
   async generateTokens(userId: number, res: Response) {

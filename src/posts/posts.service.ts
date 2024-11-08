@@ -1,40 +1,57 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { UpdatePostDto } from './dtos/update-post.dto';
-import { Post } from '@prisma/client';
+import { Post, PostPrivacyEnum } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
 
 @Injectable()
 export class PostsService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async get() {
-    return await this.prismaService.post.findMany();
+  async getAll(userId: number) {
+    // TODO: implement user friends privacy
+    return await this.prismaService.post.findMany({
+      where: {
+        OR: [
+          { privacy: PostPrivacyEnum.everyone },
+          { privacy: PostPrivacyEnum.onlyUser, userId: userId },
+        ],
+      },
+    });
   }
 
-  async createOne(dto: CreatePostDto): Promise<Post> {
+  async get(userId: number) {
+    return await this.prismaService.post.findMany({ where: { userId } });
+  }
+
+  async createOne(
+    { title, description, privacy }: CreatePostDto,
+    userId: number,
+  ): Promise<Post> {
     const post = await this.prismaService.post.create({
-      data: dto,
+      data: { title, description, privacy, userId },
     });
 
     return post;
   }
 
-  async updateOne(id: number, dto: UpdatePostDto) {
+  async updateOne(id: number, dto: UpdatePostDto, userId: number) {
     await this.getOneOrThrow(id);
 
     const updatedPost = await this.prismaService.post.update({
-      where: { id },
+      where: { id, userId },
       data: dto,
     });
 
     return updatedPost;
   }
 
-  async deleteOne(id: number) {
+  async deleteOne(id: number, userId: number) {
     await this.getOneOrThrow(id);
 
-    const deletedTask = await this.prismaService.post.delete({ where: { id } });
+    const deletedTask = await this.prismaService.post.delete({
+      where: { id, userId },
+    });
 
     return deletedTask;
   }
