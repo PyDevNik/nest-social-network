@@ -16,8 +16,10 @@ model User {
   posts Post[]
   // TODO: implement user friends
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  liked     Like[]
+  disliked  Dislike[]
 
   @@map("users")
 }
@@ -32,8 +34,10 @@ model Post {
   userId Int  @map("user_id")
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  likes     Like[]
+  dislikes  Dislike[]
 
   @@map("posts")
 }
@@ -42,4 +46,26 @@ enum PostPrivacyEnum {
   onlyUser
   onlyFriends
   everyone
+}
+
+model Like {
+  id Int @id @default(autoincrement())
+
+  userId Int  @map("user_id")
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId Int  @map("post_id")
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("likes")
+}
+
+model Dislike {
+  id Int @id @default(autoincrement())
+
+  userId Int  @map("user_id")
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  postId Int  @map("post_id")
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("dislikes")
 }

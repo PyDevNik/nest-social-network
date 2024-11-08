@@ -30,6 +30,15 @@ export class PostsController {
   async getMy(@CurrentUser('id', ParseIntPipe) userId: number) {
     return await this.postsService.getMy(userId);
   }
+
+  @Get(':id')
+  async getOne(
+    @Param('id', ParseIntPipe) postId: number,
+    @CurrentUser('id', ParseIntPipe) userId: number,
+  ) {
+    return await this.postsService.getOne(postId, userId);
+  }
+
   @Post()
   async createOne(
     @Body() dto: CreatePostDto,
@@ -40,18 +49,18 @@ export class PostsController {
 
   @Patch(':id')
   async updateOne(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe) postId: number,
     @Body() dto: UpdatePostDto,
     @CurrentUser('id', ParseIntPipe) userId: number,
   ) {
-    return await this.postsService.updateOne(id, dto, userId);
+    return await this.postsService.updateOne(postId, dto, userId);
   }
 
   @Delete(':id')
   async deleteOne(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe) postId: number,
     @CurrentUser('id', ParseIntPipe) userId: number,
   ) {
-    return await this.postsService.deleteOne(id, userId);
+    return await this.postsService.deleteOne(postId, userId);
   }
 }

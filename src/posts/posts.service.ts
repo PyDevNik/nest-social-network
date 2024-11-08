@@ -8,6 +8,18 @@ import { PrismaService } from 'prisma/prisma.service';
 export class PostsService {
   constructor(private readonly prismaService: PrismaService) {}
 
+  async getOne(postId: number, userId: number) {
+    return await this.prismaService.post.findFirst({
+      where: {
+        id: postId,
+        OR: [
+          { privacy: PostPrivacyEnum.everyone },
+          { privacy: PostPrivacyEnum.onlyUser, userId: userId },
+        ],
+      },
+    });
+  }
+
   async getAll(userId: number) {
     // TODO: implement user friends privacy
     return await this.prismaService.post.findMany({
