@@ -8,6 +8,8 @@ import {
   ParseIntPipe,
   Delete,
   UseGuards,
+  NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { Post as PrismaPost } from '@prisma/client';
@@ -36,7 +38,68 @@ export class PostsController {
     @Param('id', ParseIntPipe) postId: number,
     @CurrentUser('id', ParseIntPipe) userId: number,
   ) {
-    return await this.postsService.getOne(postId, userId);
+    const post = await this.postsService.getOne(postId, userId);
+
+    if (!post) {
+      throw new NotFoundException("Post with this ID doesn't exist");
+    }
+
+    return post;
+  }
+
+  @Post(':id/like')
+  async likePost(
+    @Param('id', ParseIntPipe) postId: number,
+    @CurrentUser('id', ParseIntPipe) userId: number,
+  ) {
+    const post = await this.postsService.getOne(postId, userId);
+
+    if (!post) {
+      throw new NotFoundException("Post with this ID doesn't exist");
+    }
+
+    const existingLike = await this.postsService.getOneLike(postId, userId);
+    if (existingLike) {
+      throw new BadRequestException('You have already liked this post.');
+    }
+    this.postsService.createOneLike(postId, userId);
+  }
+
+  @Post(':id/dislike')
+  async dislikePost(
+    @Param('id', ParseIntPipe) postId: number,
+    @CurrentUser('id', ParseIntPipe) userId: number,
+  ) {
+    const post = await this.postsService.getOne(postId, userId);
+
+    if (!post) {
+      throw new NotFoundException("Post with this ID doesn't exist");
+    }
+
+    const existingDislike = await this.postsService.getOneDislike(
+      postId,
+      userId,
+    );
+    if (existingDislike) {
+      throw new BadRequestException('You have already liked this post.');
+    }
+    this.postsService.createOneDislike(postId, userId);
+  }
+
+  @Delete(':id/like')
+  async deleteOneLike(
+    @Param('id', ParseIntPipe) postId: number,
+    @CurrentUser('id', ParseIntPipe) userId: number,
+  ) {
+    return await this.postsService.deleteOneLike(postId, userId);
+  }
+
+  @Delete(':id/dislike')
+  async deleteOneDislike(
+    @Param('id', ParseIntPipe) postId: number,
+    @CurrentUser('id', ParseIntPipe) userId: number,
+  ) {
+    return await this.postsService.deleteOneDislike(postId, userId);
   }
 
   @Post()

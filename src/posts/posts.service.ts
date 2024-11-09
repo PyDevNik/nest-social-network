@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { UpdatePostDto } from './dtos/update-post.dto';
-import { Post, PostPrivacyEnum } from '@prisma/client';
+import { Dislike, Like, Post, PostPrivacyEnum } from '@prisma/client';
 import { PrismaService } from 'prisma/prisma.service';
 
 @Injectable()
@@ -17,6 +17,18 @@ export class PostsService {
           { privacy: PostPrivacyEnum.onlyUser, userId: userId },
         ],
       },
+    });
+  }
+
+  async getOneLike(postId: number, userId: number) {
+    return await this.prismaService.like.findFirst({
+      where: { postId, userId },
+    });
+  }
+
+  async getOneDislike(postId: number, userId: number) {
+    return await this.prismaService.dislike.findFirst({
+      where: { postId, userId },
     });
   }
 
@@ -43,8 +55,20 @@ export class PostsService {
     const post = await this.prismaService.post.create({
       data: { title, description, privacy, userId },
     });
-
     return post;
+  }
+
+  async createOneLike(postId: number, userId: number): Promise<Like> {
+    const like = await this.prismaService.like.create({
+      data: { postId, userId },
+    });
+    return like;
+  }
+  async createOneDislike(postId: number, userId: number): Promise<Dislike> {
+    const dislike = await this.prismaService.dislike.create({
+      data: { postId, userId },
+    });
+    return dislike;
   }
 
   async updateOne(id: number, dto: UpdatePostDto, userId: number) {
@@ -61,11 +85,33 @@ export class PostsService {
   async deleteOne(id: number, userId: number) {
     await this.getOneOrThrow(id);
 
-    const deletedTask = await this.prismaService.post.delete({
+    const deletedPost = await this.prismaService.post.delete({
       where: { id, userId },
     });
 
-    return deletedTask;
+    return deletedPost;
+  }
+
+  async deleteOneLike(postId: number, userId: number) {
+    const existingLike = await this.getOneLike(postId, userId);
+    if (!existingLike) {
+      throw new NotFoundException("Couldn't find like with this data");
+    }
+    const deletedLike = await this.prismaService.like.delete({
+      where: { id: existingLike.id },
+    });
+    return deletedLike;
+  }
+
+  async deleteOneDislike(postId: number, userId: number) {
+    const existingDislike = await this.getOneDislike(postId, userId);
+    if (!existingDislike) {
+      throw new NotFoundException("Couldn't find like with this data");
+    }
+    const deletedDislike = await this.prismaService.dislike.delete({
+      where: { id: existingDislike.id },
+    });
+    return deletedDislike;
   }
 
   // Private methods
